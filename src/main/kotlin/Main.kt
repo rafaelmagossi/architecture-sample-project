@@ -47,6 +47,91 @@ object Main {
     }
 }
 
+/***********************************************************************************************************************
+ *                                        Classe que representa o modelo de usuário                                    *
+ **********************************************************************************************************************/
+// Modelo de dado que representa o usuário.
+@Entity(noClassnameStored = true)
+@Indexes(Index(value = "id", fields = arrayOf(Field(value = "id"))))
+data class User(
+    @Id var id: String = "",
+    var name: String = "",
+    var lastName: String = "",
+    var email: String = "",
+    var phone: String = "",
+    var password: String = "",
+    var logged: Boolean = false,
+    var authToken: String = "",
+    var role: String = "",
+    var createdAt: Date = Date(0),
+    var lastSignInAt: Date = Date(0),
+    var updatedAt: Date = Date(0)
+) {
+
+    @PrePersist
+    fun prePersist() {
+        id = ObjectId().toString()
+        logged = true
+        authToken = UUID.randomUUID().toString()
+        createdAt = Date()
+        lastSignInAt = Date()
+    }
+}
+
+/***********************************************************************************************************************
+ *                            Funções que formatam transformam a resposta da API em JSON                               *
+ **********************************************************************************************************************/
+// Classe que converte objetos em JSON.
+class DataParser : ResponseTransformer {
+
+    val mapper by lazy { ObjectMapper() }
+
+    override fun render(model: Any): String {
+        return if (model is Model) toJson(model.body) else "{}"
+    }
+
+    fun toJson(model: Any): String {
+        try {
+            mapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            return mapper.writeValueAsString(model)
+        } catch (e: Exception) {
+            return "{}"
+        }
+    }
+
+    fun <T : Any> toObject(json: String, kClass: KClass<out T>): T {
+        try {
+            mapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            return mapper.readValue(json, kClass.java)
+        } catch (e: Exception) {
+            return kClass.java.newInstance()
+        }
+    }
+}
+
+// Modelo de dados utilizado como resposta para o usuário.
+data class Model(var body: Any, @JsonIgnore var status: Int)
+
+/***********************************************************************************************************************
+ *                                                  Funções estendidas                                                 *
+ **********************************************************************************************************************/
+
+// Função que monta o objeto que será retornado pela API como resposta a ação do usuário.
+fun Response.render(body: Any, status: Int): Model {
+    type("application/json")
+    status(status)
+    return Model(body, status)
+}
+
+// Função que extrai a informação da requisição recebida pelo servidor.
+fun <T : Any> Request.bodyAsObject(kClass: KClass<T>) = body().toObject(kClass)
+
+// Função que converte json para objeto.
+fun <T : Any> String.toObject(kClass: KClass<out T>) = DataParser().toObject(this, kClass)
+
+/***********************************************************************************************************************
+ *                                           Configurações do Banco de Dados                                           *
+ **********************************************************************************************************************/
 // Classe que realiza a conexão com o banco de dados.
 class DataBaseConnection() {
 
@@ -87,74 +172,3 @@ class Repository {
     }
 }
 
-// Modelo de dado que representa o usuário.
-@Entity(noClassnameStored = true)
-@Indexes(Index(value = "id", fields = arrayOf(Field(value = "id"))))
-data class User(
-    @Id var id: String = "",
-    var name: String = "",
-    var lastName: String = "",
-    var email: String = "",
-    var phone: String = "",
-    var password: String = "",
-    var logged: Boolean = false,
-    var authToken: String = "",
-    var role: String = "",
-    var createdAt: Date = Date(0),
-    var lastSignInAt: Date = Date(0),
-    var updatedAt: Date = Date(0)
-) {
-
-    @PrePersist
-    fun prePersist() {
-        id = ObjectId().toString()
-        logged = true
-        authToken = UUID.randomUUID().toString()
-        createdAt = Date()
-        lastSignInAt = Date()
-    }
-}
-
-// Classe que converte objetos em JSON.
-class DataParser : ResponseTransformer {
-
-    val mapper by lazy { ObjectMapper() }
-
-    override fun render(model: Any): String {
-        return if (model is Model) toJson(model.body) else "{}"
-    }
-
-    fun toJson(model: Any): String {
-        try {
-            mapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-            return mapper.writeValueAsString(model)
-        } catch (e: Exception) {
-            return "{}"
-        }
-    }
-
-    fun <T : Any> toObject(json: String, kClass: KClass<out T>): T {
-        try {
-            mapper.dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-            return mapper.readValue(json, kClass.java)
-        } catch (e: Exception) {
-            return kClass.java.newInstance()
-        }
-    }
-}
-
-// Modelo de dados utilizado como resposta para o usuário.
-data class Model(var body: Any, @JsonIgnore var status: Int)
-
-// Função que monta o objeto que será retornado pela API como resposta a ação do usuário.
-fun Response.render(body: Any, status: Int): Model {
-    type("application/json")
-    status(status)
-    return Model(body, status)
-}
-
-// Função que extrai a informação da requisição recebida pelo servidor.
-fun <T : Any> Request.bodyAsObject(kClass: KClass<T>) = body().toObject(kClass)
-
-// Função que converte json para objeto.
-fun <T : Any> String.toObject(kClass: KClass<out T>) = DataParser().toObject(this, kClass)
