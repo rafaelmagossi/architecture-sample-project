@@ -1,4 +1,5 @@
 import app.user.User
+import app.user.UserRepository
 import config.api.DataParser
 import config.bodyAsObject
 import config.render
@@ -12,6 +13,10 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
+
+        val userRepository by lazy { UserRepository(Repository()) }
+
+        // Função que registrar um novo usuário.
         Spark.post("/users", Route { request, response ->
             // Transformando o JSON recebido na requisição em um objeto User.
             val user = request.bodyAsObject(User::class)
@@ -23,10 +28,30 @@ object Main {
             user.createdAt = Date()
 
             // Salvando usuário no banco de dados.
-            Repository().save(user)
+            userRepository.save(user)
 
             // Respondendo ao computador/pessoa que realizou a requisição ao servidor.
-            return@Route response.render(user, 200)
+            return@Route response.render(user, 201)
+        }, DataParser())
+
+        // Função de atualiza um usuário já existente.
+        Spark.put("/users", Route { request, response ->
+             // Transformando o JSON recebido na requisição em um objeto User.
+            val user = request.bodyAsObject(User::class)
+
+            if (user.id.isBlank()) {
+                // Respondendo ao computador/pessoa que realizou a requisição ao servidor.
+                return@Route response.render("Usuário invalido", 422)
+            } else {
+                // Informando a data de atualização do usuário.
+                user.updatedAt = Date()
+
+                //Atualizando o usuário no banco de dados.
+                userRepository.update(user)
+
+                // Respondendo ao computador/pessoa que realizou a requisição ao servidor.
+                return@Route response.render("Usuário atualizado", 200)
+            }
         }, DataParser())
     }
 }
