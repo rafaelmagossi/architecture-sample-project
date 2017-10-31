@@ -1,4 +1,3 @@
-
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.MongoClient
@@ -17,6 +16,7 @@ import org.mongodb.morphia.annotations.PrePersist
 import spark.Request
 import spark.Response
 import spark.ResponseTransformer
+import spark.Route
 import spark.Spark
 import java.security.InvalidParameterException
 import java.text.SimpleDateFormat
@@ -28,7 +28,7 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        Spark.post("/users", { request, response ->
+        Spark.post("/users", Route { request, response ->
             // Transformando o JSON recebido na requisição em um objeto User.
             val user = request.bodyAsObject(User::class)
 
@@ -42,8 +42,48 @@ object Main {
             Repository().save(user)
 
             // Respondendo ao computador/pessoa que realizou a requisição ao servidor.
-            return@post response.render(user, 200)
-        })
+            return@Route response.render(user, 200)
+        }, DataParser())
+    }
+}
+
+// Classe que realiza a conexão com o banco de dados.
+class DataBaseConnection() {
+
+    val morphia by lazy { Morphia() }
+    val username by lazy { "inteli-dev" }
+    val password by lazy { "omega3d" }
+    val name by lazy { "inteli-dev-db" }
+
+    fun createDatastore(): Datastore {
+        morphia.map(User::class.java)
+        return morphia.createDatastore(createMongoClient(), name)
+    }
+
+    fun createMongoClient(): MongoClient {
+        val serverAddress = ServerAddress("localhost", 27017)
+        val credential = MongoCredential.createCredential(username, name, password.toCharArray())
+        return MongoClient(serverAddress, listOf(credential), createMongoClientOptions())
+    }
+
+    fun createMongoClientOptions(): MongoClientOptions {
+        return MongoClientOptions.Builder()
+            .connectTimeout(10000)
+            .connectionsPerHost(100)
+            .build()
+    }
+}
+
+// Classe que executa operações no banco de dados.
+class Repository {
+
+    val dataStore by lazy { DataBaseConnection().createDatastore() }
+
+    fun save(entity: Any) {
+        if (entity::class == Any::class)
+            throw InvalidParameterException("entity: Any can't be a direct instance of Any class")
+        else
+            dataStore.save(entity)
     }
 }
 
@@ -75,22 +115,6 @@ data class User(
     }
 }
 
-// Modelo de dados utilizado como resposta para o usuário.
-data class Model(var body: Any, @JsonIgnore var status: Int)
-
-// Função que monta o objeto que será retornado pela API como resposta a ação do usuário.
-fun Response.render(body: Any, status: Int): Model {
-    type("application/json")
-    status(status)
-    return Model(body, status)
-}
-
-// Função que extrai a informação da requisição recebida pelo servidor.
-fun <T : Any> Request.bodyAsObject(kClass: KClass<T>) = body().toObject(kClass)
-
-// Função que converte json para objeto.
-fun <T : Any> String.toObject(kClass: KClass<out T>) = DataParser().toObject(this, kClass)
-
 // Classe que converte objetos em JSON.
 class DataParser : ResponseTransformer {
 
@@ -119,39 +143,18 @@ class DataParser : ResponseTransformer {
     }
 }
 
-// Classe que realiza a conexão com o banco de dados.
-class DataBaseConnection() {
+// Modelo de dados utilizado como resposta para o usuário.
+data class Model(var body: Any, @JsonIgnore var status: Int)
 
-    val morphia by lazy { Morphia() }
-
-    fun createDatastore(): Datastore {
-        morphia.map(User::class.java)
-        return morphia.createDatastore(createMongoClient(), "inteli-dev-db")
-    }
-
-    fun createMongoClient(): MongoClient {
-        val serverAddress = ServerAddress("localhost", 27017)
-        val credential = MongoCredential.createCredential("inteli-dev", "inteli-dev-db", "omega3d".toCharArray())
-        return MongoClient(serverAddress, listOf(credential), createMongoClientOptions())
-    }
-
-    fun createMongoClientOptions(): MongoClientOptions {
-        return MongoClientOptions.Builder()
-            .connectTimeout(10000)
-            .connectionsPerHost(100)
-            .build()
-    }
+// Função que monta o objeto que será retornado pela API como resposta a ação do usuário.
+fun Response.render(body: Any, status: Int): Model {
+    type("application/json")
+    status(status)
+    return Model(body, status)
 }
 
-// Classe que executa operações no banco de dados.
-class Repository {
+// Função que extrai a informação da requisição recebida pelo servidor.
+fun <T : Any> Request.bodyAsObject(kClass: KClass<T>) = body().toObject(kClass)
 
-    val dataStore by lazy { DataBaseConnection().createDatastore() }
-
-    fun save(entity: Any) {
-        if (entity::class == Any::class)
-            throw InvalidParameterException("entity: Any can't be a direct instance of Any class")
-        else
-            dataStore.save(entity)
-    }
-}
+// Função que converte json para objeto.
+fun <T : Any> String.toObject(kClass: KClass<out T>) = DataParser().toObject(this, kClass)
