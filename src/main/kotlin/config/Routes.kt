@@ -1,3 +1,5 @@
+package config
+
 import app.user.UserController
 import app.user.UserRepository
 import config.api.DataParser
@@ -5,7 +7,7 @@ import db.Repository
 import spark.Route
 import spark.Spark
 
-object Main {
+object Routes {
 
     @JvmStatic
     fun main(args: Array<String>) {
