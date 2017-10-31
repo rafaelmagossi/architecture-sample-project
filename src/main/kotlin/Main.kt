@@ -1,7 +1,7 @@
 import app.user.User
 import config.api.DataParser
-import config.api.bodyAsObject
-import config.api.render
+import config.bodyAsObject
+import config.render
 import db.Repository
 import org.bson.types.ObjectId
 import spark.Route
