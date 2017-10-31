@@ -1,5 +1,7 @@
-package config.api
+package config
 
+import config.api.DataParser
+import config.api.Model
 import spark.Request
 import spark.Response
 import kotlin.reflect.KClass
