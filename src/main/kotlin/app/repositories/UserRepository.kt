@@ -1,5 +1,6 @@
-package app.user
+package app.repositories
 
+import app.models.User
 import db.Repository
 import db.RepositoryContract
 import java.util.Date

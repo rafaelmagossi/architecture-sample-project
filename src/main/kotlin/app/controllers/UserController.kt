@@ -1,13 +1,21 @@
-package app.user
+package app.controllers
 
+import app.models.User
+import app.repositories.UserRepository
 import config.api.Model
 import config.bodyAsObject
 import config.render
+import spark.ModelAndView
 import spark.Request
 import spark.Response
 import java.util.Date
 
 class UserController(val userRepository: UserRepository) {
+
+    fun get(request: Request, response: Response): ModelAndView {
+        val users = userRepository.findAll(User::class)
+        return response.render("users", users, "index.mustache")
+    }
 
     fun post(request: Request, response: Response): Model {
         // Transformando o JSON recebido na requisição em um objeto User.

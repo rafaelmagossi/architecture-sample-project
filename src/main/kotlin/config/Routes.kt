@@ -1,11 +1,13 @@
 package config
 
-import app.user.UserController
-import app.user.UserRepository
+import app.controllers.UserController
+import app.repositories.UserRepository
 import config.api.DataParser
 import db.Repository
 import spark.Route
 import spark.Spark
+import spark.TemplateViewRoute
+import spark.template.mustache.MustacheTemplateEngine
 
 object Routes {
 
@@ -14,6 +16,11 @@ object Routes {
 
         val userRepository by lazy { UserRepository(Repository()) }
         val userController by lazy { UserController(userRepository) }
+
+        // Função que renderiza a página HTML que lista os usuários.
+        Spark.get("/users", TemplateViewRoute { request, response ->
+            userController.get(request, response)
+        }, MustacheTemplateEngine())
 
         // Função que registrar um novo usuário.
         Spark.post("/users", Route { request, response ->

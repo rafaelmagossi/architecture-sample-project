@@ -1,6 +1,6 @@
 package db.connection
 
-import app.user.User
+import app.models.User
 import com.mongodb.MongoClient
 import com.mongodb.MongoClientOptions
 import com.mongodb.MongoCredential

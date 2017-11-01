@@ -2,6 +2,7 @@ package config
 
 import config.api.DataParser
 import config.api.Model
+import spark.ModelAndView
 import spark.Request
 import spark.Response
 import kotlin.reflect.KClass
@@ -11,6 +12,8 @@ fun Response.render(body: Any, status: Int): Model {
     status(status)
     return Model(body, status)
 }
+
+fun Response.render(tag: String, model: Any, viewName: String) = ModelAndView(hashMapOf(Pair(tag, model)), viewName)
 
 fun <T : Any> Request.bodyAsObject(kClass: KClass<T>) = body().toObject(kClass)
 
