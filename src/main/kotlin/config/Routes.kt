@@ -16,11 +16,12 @@ object Routes {
 
         val userRepository by lazy { UserRepository(Repository()) }
         val userController by lazy { UserController(userRepository) }
+        val templateEngine by lazy { MustacheTemplateEngine("views") }
 
         // Função que renderiza a página HTML que lista os usuários.
         Spark.get("/users", TemplateViewRoute { request, response ->
             userController.get(request, response)
-        }, MustacheTemplateEngine())
+        }, templateEngine)
 
         // Função que registrar um novo usuário.
         Spark.post("/users", Route { request, response ->
