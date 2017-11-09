@@ -20,7 +20,7 @@ para os nossos projetos.
 # Como navegar pelos passos do projeto
 
 Para navegar pelos passos do projeto basta executar o comando
-```bash git checkout Passo-1```.
+```git checkout Passo-1```.
 
 Nesse projeto existem um total de 6 passos, para um melhor entendimento da evolução
-do código é aconcelhado que se navege do *Passo-1* até o *Passo-6*.
+do código é aconcelhado que se navege do **Passo-1** até o **Passo-6**.
