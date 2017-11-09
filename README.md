@@ -8,7 +8,7 @@ para os nossos projetos.
 # Requisitos para rodar o projeto
 
 * Git
-* JDK*8 ou mais recente
+* JDK8 ou mais recente
 * Kotlin 1.1.51 ou mais recente
 * Gradle 4.3 ou mais recente
 * MongoDB 3.4 ou mais recente
