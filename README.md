@@ -16,6 +16,7 @@ para os nossos projetos.
 # Requisitos para visualizar e navegar pelos passos do projeto
 
 * Git
+* [Como instalar o Git](https://git-scm.com/book/pt-br/v1/Primeiros-passos-Instalando-Git)
 
 # Como navegar pelos passos do projeto
 
